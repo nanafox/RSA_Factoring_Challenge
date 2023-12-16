@@ -85,7 +85,10 @@ void print_prime_factors(long long int number)
 		if ((number % odd_prime) == 0)
 		{
 			printf("%lld=%lld*%lld\n", number, number / odd_prime, odd_prime);
-			break;
+			return;
 		}
 	}
+
+	/* the number is a prime number */
+	printf("%lld=%lld*%d\n", number, number, 1);
 }
