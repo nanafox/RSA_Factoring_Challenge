@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
  */
 void print_prime_factors(long long int number)
 {
-	long long int odd_prime, original_number = number;
+	long long int odd_prime;
 
 	if (number <= 1)
 		return;
@@ -82,7 +82,7 @@ void print_prime_factors(long long int number)
 
 	for (odd_prime = 3; odd_prime <= sqrt(number); odd_prime += 2)
 	{
-		if ((number % odd_prime) != 0)
+		if ((number % odd_prime) == 0)
 		{
 			printf("%lld=%lld*%lld\n", number, number / odd_prime, odd_prime);
 			break;
