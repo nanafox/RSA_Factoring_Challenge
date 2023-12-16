@@ -1,8 +1,9 @@
 #include <errno.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-void print_prime_factors(size_t number);
+void print_prime_factors(long long int number);
 
 /**
  * main - Prime factorization
@@ -15,8 +16,8 @@ int main(int argc, char *argv[])
 {
 	FILE *file;
 	char *buffer = NULL;
-	ssize_t n_read;
-	size_t number, n = 0;
+	long long int n_read, number;
+	size_t n = 0;
 
 	if (argc != 2)
 	{
@@ -65,23 +66,26 @@ int main(int argc, char *argv[])
  * of two smaller numbers and prints the result
  * @number: the number to factorize
  */
-void print_prime_factors(size_t number)
+void print_prime_factors(long long int number)
 {
-	size_t original_number = number, odd_prime = 3;
+	long long int odd_prime, original_number = number;
 
-	if (number == 1)
+	if (number <= 1)
 		return;
 
+	/* let's check whether it's divisible 2 and perform an early return */
 	if (number % 2 == 0)
 	{
-		printf("%lu=%lu*%d\n", number, number / 2, 2);
+		printf("%lld=%lld*%d\n", number, number / 2, 2);
 		return;
 	}
 
-	while ((number % odd_prime) != 0)
+	for (odd_prime = 3; odd_prime <= sqrt(number); odd_prime += 2)
 	{
-		odd_prime += 2;
+		if ((number % odd_prime) != 0)
+		{
+			printf("%lld=%lld*%lld\n", number, number / odd_prime, odd_prime);
+			break;
+		}
 	}
-
-	printf("%lu=%lu*%lu\n", original_number, number / odd_prime, odd_prime);
 }
