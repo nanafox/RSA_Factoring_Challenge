@@ -7,17 +7,37 @@ import (
 	"os"
 )
 
+var result_cache map[string]string
+
+func get_prev_prime(number string) (string, bool) {
+	cached_result, found := result_cache[number]
+
+	return cached_result, found
+}
 
 // factorizes as many numbers as possible into a product
 // of two smaller numbers and prints the result
-func print_prime_factors(number *big.Int) {
+func print_prime_factors(number *big.Int, odd_prime *big.Int) int {
 	zero := big.NewInt(0)
 	one := big.NewInt(1)
 	two := big.NewInt(2)
+	limit := big.NewInt(611953)
+
+	// now I don't care what really happens, let us go until we can't
+	if odd_prime.Cmp(limit) == 0 {
+		limit.Set(big.NewInt(1000000000))
+	}
 
 	// Handle the case when the number is less than or equal to 1
 	if number.Cmp(one) <= 0 {
-		return
+		return 0
+	}
+
+	// check for cached values
+	cache, found := get_prev_prime(number.String())
+	if found {
+		fmt.Printf("%s=%s\n", number.String(), cache)
+		return 0
 	}
 
 	// Handle the case when the number is divisible by 2
@@ -25,30 +45,36 @@ func print_prime_factors(number *big.Int) {
 		result := new(big.Int)
 		result.Quo(number, two)
 		fmt.Printf("%s=%s*2\n", number.String(), result.String())
-		return
+		return 0
 	}
 
-	odd_prime := big.NewInt(3) // the starting number for odd primes
 	sqrt_number := new(big.Int).Set(number)
 	sqrt_number.Sqrt(sqrt_number)
 
 	for odd_prime.Cmp(sqrt_number) <= 0 {
 		if new(big.Int).Mod(number, odd_prime).Cmp(zero) == 0 {
-			result := new(big.Int)
-			result.Quo(number, odd_prime)
-			fmt.Printf("%s=%s*%s\n", number.String(), result.String(),
+			quotient := new(big.Int)
+
+			// this is an expensive operation so we'd save the result for later
+			quotient.Quo(number, odd_prime)
+
+			// let's save the result for later
+			result_cache[number.String()] = quotient.String() + "*" +
+											odd_prime.String()
+			fmt.Printf("%s=%s*%s\n", number.String(), quotient.String(),
 						odd_prime.String())
-			return
+			return 0
 		}
 		// skip this number if we go past this prime number without a match
-		if odd_prime.Cmp(big.NewInt(611953)) > 0 {
-			return
+		if odd_prime.Cmp(limit) > 0 {
+			return 1
 		}
 		odd_prime.Add(odd_prime, two) // odd_prime += 2
 	}
 
 	// the number is a prime
 	fmt.Printf("%s=%s*1\n", number.String(), number.String())
+	return 0
 }
 
 func main() {
@@ -64,6 +90,10 @@ func main() {
 	}
 	defer file.Close()
 
+	// initialize the hash map
+	result_cache = make(map[string]string)
+
+	var x = []*big.Int{}
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text() // grabs the current line (number) in the file
@@ -73,7 +103,20 @@ func main() {
 		if ok == false {
 			continue // never mind, let's get the next one
 		}
-		print_prime_factors(number)
+
+		val := print_prime_factors(number, big.NewInt(3))
+
+		// keep numbers with large with prime factors for later
+		if (val == 1) {
+			x = append(x, number)
+		}
+	}
+
+	/* work on the numbers with very big prime factors */
+	size := len(x)
+
+	for i := 0; i < size; i++ {
+		print_prime_factors(x[i], big.NewInt(611953))
 	}
 
 	// check for file reading errors
