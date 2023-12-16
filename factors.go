@@ -9,12 +9,6 @@ import (
 
 var result_cache map[string]string
 
-func get_prev_prime(number string) (string, bool) {
-	cached_result, found := result_cache[number]
-
-	return cached_result, found
-}
-
 // factorizes as many numbers as possible into a product
 // of two smaller numbers and prints the result
 func print_prime_factors(number *big.Int, odd_prime *big.Int) int {
@@ -34,17 +28,19 @@ func print_prime_factors(number *big.Int, odd_prime *big.Int) int {
 	}
 
 	// check for cached values
-	cache, found := get_prev_prime(number.String())
+	cached_result, found := result_cache[number.String()]
 	if found {
-		fmt.Printf("%s=%s\n", number.String(), cache)
+		fmt.Printf("%s=%s\n", number.String(), cached_result)
 		return 0
 	}
 
 	// Handle the case when the number is divisible by 2
 	if new(big.Int).Mod(number, two).Cmp(zero) == 0 {
-		result := new(big.Int)
-		result.Quo(number, two)
-		fmt.Printf("%s=%s*2\n", number.String(), result.String())
+		quotient := new(big.Int)
+		quotient.Quo(number, two)
+		result_cache[number.String()] = quotient.String() + "*" +
+										two.String()
+		fmt.Printf("%s=%s*2\n", number.String(), quotient.String())
 		return 0
 	}
 
