@@ -7,9 +7,6 @@ import (
 	"os"
 )
 
-// A hash map to store prime numbers for easy look up
-var result_cache map[string]string
-
 // reads from a file and calls another function perform and print
 // prime factors
 func main() {
@@ -25,11 +22,8 @@ func main() {
 	}
 	defer file.Close()
 
-	// initialize the hash map
-	result_cache = make(map[string]string)
-
-	var big_primes = []*big.Int{}
-	size_of_primes := 0
+	var bigPrimes = []*big.Int{}
+	sizeOfPrimes := 0
 
 	scanner := bufio.NewScanner(file)
 
@@ -42,19 +36,18 @@ func main() {
 			continue // never mind, let's get the next one
 		}
 
-		val := print_prime_factors(number, big.NewInt(3))
+		val := printPrimeFactors(number, big.NewInt(3))
 
 		// keep numbers with large with prime factors for later
 		if val == 1 {
-			big_primes = append(big_primes, number)
-			size_of_primes++
+			bigPrimes = append(bigPrimes, number)
+			sizeOfPrimes++
 		}
 	}
 
-	fmt.Printf("Size of big primes: [%d]\n", size_of_primes)
 	/* work on the numbers with very big prime factors */
-	for i := 0; i < size_of_primes; i++ {
-		print_prime_factors(big_primes[i], big.NewInt(611953))
+	for i := 0; i < sizeOfPrimes; i++ {
+		printPrimeFactors(bigPrimes[i], big.NewInt(611953))
 	}
 
 	// check for file reading errors
