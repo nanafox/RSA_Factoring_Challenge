@@ -20,10 +20,13 @@ func printPrimeFactors(number *big.Int, oddPrime *big.Int) int {
 	one := big.NewInt(1)
 	two := big.NewInt(2)
 	limit := big.NewInt(611953)
+	stopLoop := 20000000
 
 	// now I don't care what really happens, let us go until we can't
 	if oddPrime.Cmp(limit) >= 0 {
 		limit.Set(big.NewInt(30597650))
+	} else {
+		stopLoop = 300000000
 	}
 
 	// Handle the case when the number is less than or equal to 1
@@ -68,7 +71,7 @@ func printPrimeFactors(number *big.Int, oddPrime *big.Int) int {
 			return 0
 		}
 		// skip this number if we go past this prime number without a match
-		if oddPrime.Cmp(limit) > 0 || loopCounter == 10000000 {
+		if oddPrime.Cmp(limit) > 0 || loopCounter > stopLoop {
 			// fmt.Printf("Limit reached for [%s]\n", number.String())
 			return 1
 		}
