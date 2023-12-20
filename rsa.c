@@ -45,13 +45,10 @@ int main(int argc, char *argv[])
 	}
 
 	/* initialize the number and check for errors */
-	if (mpz_init_set_str(number, buffer, 10) == -1)
+	if (mpz_init_set_str(number, buffer, 10) == 0)
 	{
-		mpz_clear(number);
-		return (EXIT_FAILURE);
+		print_prime_factors(number);
 	}
-
-	print_prime_factors(number);
 
 	free(buffer);
 	fclose(file);
@@ -81,6 +78,10 @@ void print_prime_factors(mpz_t number)
 	{
 		mpz_divexact_ui(quotient, number, 2);
 		gmp_printf("%Zd=%Zd*%d\n", number, quotient, 2);
+
+		/* clean up what was used */
+		mpz_clear(odd_prime);
+		mpz_clear(quotient);
 		return;
 	}
 
