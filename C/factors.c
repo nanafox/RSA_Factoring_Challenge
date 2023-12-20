@@ -1,9 +1,9 @@
+#include </usr/local/include/gmp.h>
 #include <errno.h>
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-void print_prime_factors(long long int number);
+void print_prime_factors(mpz_t number);
 
 /**
  * main - Prime factorization
@@ -16,8 +16,8 @@ int main(int argc, char *argv[])
 {
 	FILE *file;
 	char *buffer = NULL;
-	long long int n_read, number;
 	size_t n = 0;
+	mpz_t number;
 
 	if (argc != 2)
 	{
@@ -32,30 +32,27 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	while ((n_read = getline(&buffer, &n, file)) != -1)
+	while (getline(&buffer, &n, file) != -1)
 	{
-		buffer[n_read - 1] = '\0';
-		number = atoll(buffer);
-
+		/* initialize the number and check for errors */
+		if (mpz_init_set_str(number, buffer, 10) == -1)
+		{
+			fprintf(stderr, "Invalid number\n");
+			mpz_clear(number);
+			continue; /* yes, it was invalid but just skip it */
+		}
 		print_prime_factors(number);
 	}
 
 	free(buffer);
-	buffer = NULL;
 	fclose(file);
 
-	if (n_read == -1)
+	mpz_clear(number);
+
+	if (errno == ENOMEM)
 	{
-		if (errno == ENOMEM)
-		{
-			fprintf(stderr, "Error: malloc failed\n");
-			exit(EXIT_FAILURE);
-		}
-		if (errno == EINVAL)
-		{
-			fprintf(stderr, "Error: Invalid parameter received\n");
-			exit(EXIT_FAILURE);
-		}
+		fprintf(stderr, "Error: malloc failed\n");
+		exit(EXIT_FAILURE);
 	}
 
 	return (EXIT_SUCCESS);
@@ -66,29 +63,50 @@ int main(int argc, char *argv[])
  * of two smaller numbers and prints the result
  * @number: the number to factorize
  */
-void print_prime_factors(long long int number)
+void print_prime_factors(mpz_t number)
 {
-	long long int odd_prime;
+	mpz_t odd_prime, quotient;
 
-	if (number <= 1)
-		return;
+	mpz_init(odd_prime);
+	mpz_init(quotient);
 
-	/* let's check whether it's divisible 2 and perform an early return */
-	if (number % 2 == 0)
+	if (mpz_cmp_si(number, 1) <= 0)
+		return; /* skip 1 and anything below it */
+
+	/* let's check whether it's divisible by 2 and perform an early return */
+	if (mpz_even_p(number) != 0)
 	{
-		printf("%lld=%lld*%d\n", number, number / 2, 2);
+		mpz_divexact_ui(quotient, number, 2);
+		gmp_printf("%Zd=%Zd*%d\n", number, quotient, 2);
 		return;
 	}
 
-	for (odd_prime = 3; odd_prime <= sqrt(number); odd_prime += 2)
+	/* let's use odd numbers and step through the number, it wasn't even */
+	mpz_set_ui(odd_prime, 3);
+	mpz_sqrt(quotient, number);
+
+	while (mpz_cmp(odd_prime, quotient) <= 0)
 	{
-		if ((number % odd_prime) == 0)
+		if (mpz_divisible_p(number, odd_prime) != 0)
 		{
-			printf("%lld=%lld*%lld\n", number, number / odd_prime, odd_prime);
+			mpz_divexact(quotient, number, odd_prime);
+			/* print the result*/
+			gmp_printf("%Zd=%Zd*%Zd\n", number, quotient, odd_prime);
+
+			/* clean up and return */
+			mpz_clear(odd_prime);
+			mpz_clear(quotient);
 			return;
 		}
+
+		/* increment odd_prime by 2 */
+		mpz_add_ui(odd_prime, odd_prime, 2); /* odd_prime += 2*/
 	}
 
 	/* the number is a prime number */
-	printf("%lld=%lld*%d\n", number, number, 1);
+	gmp_printf("%Zd=%Zd*%d\n", number, number, 1);
+
+	/* clean up what was used */
+	mpz_clear(odd_prime);
+	mpz_clear(quotient);
 }
