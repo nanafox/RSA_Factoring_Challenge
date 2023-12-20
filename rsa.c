@@ -17,6 +17,7 @@ int main(int argc, char *argv[])
 	FILE *file;
 	char *buffer = NULL;
 	size_t n = 0;
+	ssize_t n_read;
 	mpz_t number;
 
 	if (argc != 2)
@@ -32,27 +33,30 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	while (getline(&buffer, &n, file) != -1)
+	n_read = getline(&buffer, &n, file);
+	if (n_read == -1)
 	{
-		/* initialize the number and check for errors */
-		if (mpz_init_set_str(number, buffer, 10) == -1)
+		if (errno == ENOMEM)
 		{
-			mpz_clear(number);
-			continue; /* yes, it was invalid but just skip it */
+			fprintf(stderr, "Error: malloc failed\n");
+			exit(EXIT_FAILURE);
 		}
-		print_prime_factors(number);
+		return (EXIT_SUCCESS);
 	}
+
+	/* initialize the number and check for errors */
+	if (mpz_init_set_str(number, buffer, 10) == -1)
+	{
+		mpz_clear(number);
+		return (EXIT_FAILURE);
+	}
+
+	print_prime_factors(number);
 
 	free(buffer);
 	fclose(file);
 
 	mpz_clear(number);
-
-	if (errno == ENOMEM)
-	{
-		fprintf(stderr, "Error: malloc failed\n");
-		exit(EXIT_FAILURE);
-	}
 
 	return (EXIT_SUCCESS);
 }
