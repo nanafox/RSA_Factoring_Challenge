@@ -37,7 +37,6 @@ int main(int argc, char *argv[])
 		/* initialize the number and check for errors */
 		if (mpz_init_set_str(number, buffer, 10) == -1)
 		{
-			fprintf(stderr, "Invalid number\n");
 			mpz_clear(number);
 			continue; /* yes, it was invalid but just skip it */
 		}
